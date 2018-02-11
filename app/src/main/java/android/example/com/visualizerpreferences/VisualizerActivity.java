@@ -32,7 +32,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-public class VisualizerActivity extends AppCompatActivity {
+public class VisualizerActivity extends AppCompatActivity
+        implements SharedPreferences.OnSharedPreferenceChangeListener{
 
     private static final int MY_PERMISSION_RECORD_AUDIO_REQUEST_CODE = 88;
     private VisualizerView mVisualizerView;
@@ -56,6 +57,8 @@ public class VisualizerActivity extends AppCompatActivity {
         mVisualizerView.setShowTreble(true);
         mVisualizerView.setMinSizeScale(1);
         mVisualizerView.setColor(getString(R.string.pref_color_red_value));
+
+        sharedPreferences.registerOnSharedPreferenceChangeListener(this);
     }
 
     /**
@@ -72,6 +75,13 @@ public class VisualizerActivity extends AppCompatActivity {
         if (mAudioInputReader != null) {
             mAudioInputReader.shutdown(isFinishing());
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .unregisterOnSharedPreferenceChangeListener(this);
     }
 
     @Override
@@ -112,7 +122,9 @@ public class VisualizerActivity extends AppCompatActivity {
                     mAudioInputReader = new AudioInputReader(mVisualizerView, this);
 
                 } else {
-                    Toast.makeText(this, "Permission for audio not granted. Visualizer can't run.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(this,
+                            "Permission for audio not granted. Visualizer can't run.", Toast.LENGTH_LONG)
+                            .show();
                     finish();
                     // The permission was denied, so we can show a message why we can't run the app
                     // and then close the app.
@@ -136,5 +148,14 @@ public class VisualizerActivity extends AppCompatActivity {
             startActivity(intent);
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if(key.equals(getString(R.string.pref_show_bass_key))){
+            mVisualizerView.setShowBass(sharedPreferences.getBoolean(
+                    key,getResources().getBoolean(R.bool.pref_show_bass_default)));
+
+        }
     }
 }
